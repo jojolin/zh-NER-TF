@@ -52,12 +52,6 @@ My test performance:
 - `python main.py --mode=demo -s "一体化自助服务终端机依次排开" --model=1521112368`
 - `python main.py --mode=demoi --model=1521112368`
 
-You can input one Chinese sentence and the model will return the recognition result:
-
-![demo_pic](./pics/pic2.png)
-
-
-
 ### references
 
 \[1\] [Bidirectional LSTM-CRF Models for Sequence Tagging](https://arxiv.org/pdf/1508.01991v1.pdf)
