@@ -29,11 +29,12 @@ It looks like a portion of [MSRA corpus](http://sighan.cs.uchicago.edu/bakeoff20
 
 ### train
 
-`python main.py --mode=train `
+`python main.py -m=build_tag -t rb1`
+`python main.py -m=train -t rb1`
 
 ### test
 
-`python main.py --mode=test --demo_model=1521112368`
+`python main.py --mode=test -t rb1 --model=1521112368`
 
 Please set the parameter `--demo_model` to the model which you want to test. `1521112368` is the model trained by me. 
 
@@ -48,7 +49,8 @@ My test performance:
 
 ### demo
 
-`python main.py --mode=demo --demo_model=1521112368`
+`python main.py --mode=demo -s "一体化自助服务终端机依次排开" --model=1521112368`
+`python main.py --mode=demoi --model=1521112368`
 
 You can input one Chinese sentence and the model will return the recognition result:
 

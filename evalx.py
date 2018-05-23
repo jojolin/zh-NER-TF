@@ -21,6 +21,6 @@ def conlleval(label_predict, label_path, metric_path):
         fw.writelines(line)
     os.system("perl {} < {} > {}".format(eval_perl, label_path, metric_path))
     with open(metric_path) as fr:
-        metrics = [line.strip() for line in fr]
+        metrics = [li.strip() for li in fr]
     return metrics
-    
+

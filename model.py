@@ -1,4 +1,3 @@
-import numpy as np
 import os, time, sys
 import tensorflow as tf
 from tensorflow.contrib.rnn import LSTMCell
@@ -6,7 +5,7 @@ from tensorflow.contrib.crf import crf_log_likelihood
 from tensorflow.contrib.crf import viterbi_decode
 from data import pad_sequences, batch_yield
 from utils import get_logger
-from eval import conlleval
+from evalx import conlleval
 
 
 class BiLSTM_CRF(object):
@@ -172,7 +171,7 @@ class BiLSTM_CRF(object):
         """
 
         :param sess:
-        :param sent: 
+        :param sent:
         :return:
         """
         label_list = []
