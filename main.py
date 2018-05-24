@@ -1,8 +1,9 @@
+import json
 import tensorflow as tf
 import numpy as np
 import os, argparse, time
 from model import BiLSTM_CRF
-from utils import str2bool, get_logger
+from utils import str2bool, get_logger, merge_tag
 from data import read_corpus, read_dictionary, random_embedding
 
 
@@ -33,6 +34,7 @@ parser.add_argument('--shuffle', type=str2bool, default=True, help='shuffle trai
 parser.add_argument('--mode', '-m', type=str, default='demo', help='train/test/demo')
 parser.add_argument('--model', type=str, default='1521112368', help='model for test and demo')
 parser.add_argument('--sentence', '-s', type=str, default='', help='sentence to tag')
+parser.add_argument('--sfile', '-f', type=str, default='', help='file contains sentence to tag')
 args = parser.parse_args()
 
 def load_stuff():
@@ -75,31 +77,6 @@ def init_paths_config():
 
     return paths
 
-paths = init_paths_config()
-
-def get_entity(tags, sents):
-    '''
-    e.g: ['B_n', 'E_n', 'B_v', 'E_v', 'B_v', 'E_v', 'B_a', 'E_a', 'B_v', 'E_v', 'S_w', 'S_d', 'B_v', 'E_v', 'S_u', 'S_v'] ->
-    '''
-    i = j = 0
-    res = []
-    while j < len(tags):
-        jpos = tags[j].split('_')[0]
-        tag = tags[j].split('_')[1]
-        if jpos == 'B':
-            # word BEGIN
-            i = j
-        elif jpos == 'S':
-            # world SINGLE
-            i = j
-            res.append('%s/%s' % (''.join(sents[i:j+1]), tag))
-        elif jpos == 'E':
-            # word END
-            res.append('%s/%s' % (''.join(sents[i:j+1]), tag))
-
-        j+=1
-    return res
-
 def build_tags(data):
     tagu = []
     for d in data:
@@ -120,7 +97,6 @@ def load_taglabel(filep):
     return tag_label
 
 def build_tag():
-    import json
     train_path = os.path.join('.', args.train_data, 'train.txt')
     train_data = read_corpus(train_path)
     dev_path = os.path.join('.', args.train_data, 'dev.txt')
@@ -172,6 +148,20 @@ def demo(word2id, embeddings, paths, mode='demo'):
     model = BiLSTM_CRF(args, embeddings, taglabel, word2id, paths, config=config)
     model.build_graph()
     saver = tf.train.Saver()
+
+    def handle_sen(sentence):
+        demo_sent = list(sentence.strip())
+        demo_data = [(demo_sent, ['_'] * len(demo_sent))]
+        tag = model.demo_one(sess, demo_data)
+        # res = get_entity(tag, demo_sent)
+        tag_merge = merge_tag(tag)
+        print(tag_merge)
+        res = []
+        for t, st, ed in tag_merge:
+            # [(tag, start_index, end_index)]
+            res.append(''.join(demo_sent[st:ed]) + '/' + t)
+        return ''.join(demo_sent), tag, res
+
     with tf.Session(config=config) as sess:
         print('============= demo =============')
         saver.restore(sess, ckpt_file)
@@ -183,18 +173,19 @@ def demo(word2id, embeddings, paths, mode='demo'):
                     print('See you next time!')
                     break
                 else:
-                    demo_sent = list(demo_sent.strip())
-                    demo_data = [(demo_sent, ['_'] * len(demo_sent))]
-                    tag = model.demo_one(sess, demo_data)
-                    res = get_entity(tag, demo_sent)
-                    print('sen: %s\ntag: %s\nres: %s' % (demo_sent, tag, res))
+                    sent, tag, res = handle_sen(demo_sent.strip())
+                    print('sen: %s\ntag: %s\nres: %s' % (sent, tag, res))
         else:
-            demo_sent = args.sentence
-            demo_sent = list(demo_sent.strip())
-            demo_data = [(demo_sent, ['_'] * len(demo_sent))]
-            tag = model.demo_one(sess, demo_data)
-            res = get_entity(tag, demo_sent)
-            print('sen: %s\ntag: %s\nres: %s' % (demo_sent, tag, res))
+            if args.sentence != '':
+                sent = args.sentence
+                demo_sent, tag, res = handle_sen(demo_sent.strip())
+                print('sen: %s\ntag: %s\nres: %s' % (sent, tag, res))
+            elif args.sfile != '':
+                with open(args.sfile, 'r') as r:
+                    lines = r.readlines()
+                    for line in lines:
+                        sent, tag, res = handle_sen(line.strip())
+                        print('sen: %s\ntag: %s\nres: %s' % (sent, tag, res))
 
 def run():
     if args.mode == 'build_tag':
@@ -211,8 +202,8 @@ def run():
         test(word2id, embeddings, paths)
 
     elif args.mode == 'demoi' or args.mode == 'demo':
-        if args.mode == 'demo' and args.sentence == '':
-            print('empty sentence! please specify sentence with -s `sentence`')
+        if args.mode == 'demo' and args.sentence == '' and args.sfile == '':
+            print('empty sentence! please specify sentence with -s `sentence` or -f `file-contains-sentences` ')
             return
 
         demo(word2id, embeddings, paths, args.mode)

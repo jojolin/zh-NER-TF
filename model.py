@@ -216,7 +216,7 @@ class BiLSTM_CRF(object):
             if step + 1 == num_batches:
                 saver.save(sess, self.model_path, global_step=step_num)
 
-        self.logger.info('===========validation / test===========')
+        self.logger.info('=========== validation / test ===========')
         label_list_dev, seq_len_list_dev = self.dev_one_epoch(sess, dev)
         self.evaluate(label_list_dev, seq_len_list_dev, dev, epoch)
 

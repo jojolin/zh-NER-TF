@@ -78,100 +78,102 @@ while (@ARGV and $ARGV[0] =~ /^-/) {
    } else { die "conlleval: unknown argument $ARGV[0]\n"; }
 }
 if (@ARGV) { die "conlleval: unexpected command line argument\n"; }
+
 # process input
 while (<STDIN>) {
-   chomp($line = $_);
-   @features = split(/$delimiter/,$line);
-   if ($nbrOfFeatures < 0) { $nbrOfFeatures = $#features; }
-   elsif ($nbrOfFeatures != $#features and @features != 0) {
-      printf STDERR "unexpected number of features: %d (%d)\n",
-         $#features+1,$nbrOfFeatures+1;
-      exit(1);
-   }
-   if (@features == 0 or 
-       $features[0] eq $boundary) { @features = ($boundary,"0","0"); }
-   if (@features < 2) { 
-      die "conlleval: unexpected number of features in line $line\n"; 
-   }
-   if ($raw) {
-      if ($features[$#features] eq $oTag) { $features[$#features] = "0"; } 
-      if ($features[$#features-1] eq $oTag) { $features[$#features-1] = "0"; } 
-      if ($features[$#features] ne "0") { 
-         $features[$#features] = "B-$features[$#features]";
-      }
-      if ($features[$#features-1] ne "0") { 
-         $features[$#features-1] = "B-$features[$#features-1]";
-      }
-   }
-   # 20040126 ET code which allows hyphens in the types
-   if ($features[$#features] =~ /^([^-]*)-(.*)$/) {
-      $guessed = $1;
-      $guessedType = $2;
-   } else { 
-      $guessed = $features[$#features]; 
-      $guessedType = ""; 
-   }
-   pop(@features);
-   if ($features[$#features] =~ /^([^-]*)-(.*)$/) {
-      $correct = $1;
-      $correctType = $2;
-   } else { 
-      $correct = $features[$#features]; 
-      $correctType = ""; 
-   }
-   pop(@features);
+    chomp($line = $_);
+    @features = split(/$delimiter/,$line);
+    if ($nbrOfFeatures < 0) { $nbrOfFeatures = $#features; }
+    elsif ($nbrOfFeatures != $#features and @features != 0) {
+        printf STDERR "unexpected number of features: %d (%d)\n",
+        $#features+1,$nbrOfFeatures+1;
+        exit(1);
+    }
+    if (@features == 0 or 
+        $features[0] eq $boundary) { @features = ($boundary,"0","0"); }
+    if (@features < 2) { 
+        die "conlleval: unexpected number of features in line $line\n"; 
+    }
+    if ($raw) {
+        if ($features[$#features] eq $oTag) { $features[$#features] = "0"; } 
+        if ($features[$#features-1] eq $oTag) { $features[$#features-1] = "0"; } 
+        if ($features[$#features] ne "0") { 
+            $features[$#features] = "B-$features[$#features]";
+        }
+        if ($features[$#features-1] ne "0") { 
+            $features[$#features-1] = "B-$features[$#features-1]";
+        }
+    }
+    # 20040126 ET code which allows hyphens in the types
+    if ($features[$#features] =~ /^([^-]*)-(.*)$/) {
+        $guessed = $1;
+        $guessedType = $2;
+    } else { 
+        $guessed = $features[$#features]; 
+        $guessedType = ""; 
+    }
+    pop(@features);
+    if ($features[$#features] =~ /^([^-]*)-(.*)$/) {
+        $correct = $1;
+        $correctType = $2;
+    } else { 
+        $correct = $features[$#features]; 
+        $correctType = ""; 
+    }
+    pop(@features);
 #  ($guessed,$guessedType) = split(/-/,pop(@features));
 #  ($correct,$correctType) = split(/-/,pop(@features));
-   $guessedType = $guessedType ? $guessedType : "";
-   $correctType = $correctType ? $correctType : "";
-   $firstItem = shift(@features);
+    $guessedType = $guessedType ? $guessedType : "";
+    $correctType = $correctType ? $correctType : "";
+    $firstItem = shift(@features);
 
 
-   # 1999-06-26 sentence breaks should always be counted as out of chunk
-   #if ( $firstItem eq $boundary ) { $guessed = "0"; }
+    # 1999-06-26 sentence breaks should always be counted as out of chunk
+    #if ( $firstItem eq $boundary ) { $guessed = "0"; }
 
-   if ($inCorrect) {
-      if ( &endOfChunk($lastCorrect,$correct,$lastCorrectType,$correctType) and
-           &endOfChunk($lastGuessed,$guessed,$lastGuessedType,$guessedType) and
-           $lastGuessedType eq $lastCorrectType) {
-         $inCorrect=$false;
-         $correctChunk++;
-         $correctChunk{$lastCorrectType} = $correctChunk{$lastCorrectType} ?
-             $correctChunk{$lastCorrectType}+1 : 1;
-      } elsif ( 
-           &endOfChunk($lastCorrect,$correct,$lastCorrectType,$correctType) != 
-           &endOfChunk($lastGuessed,$guessed,$lastGuessedType,$guessedType) or
-           $guessedType ne $correctType ) {
-         $inCorrect=$false; 
-      }
-   }
+    if ($inCorrect) {
+        if ( &endOfChunk($lastCorrect,$correct,$lastCorrectType,$correctType) and
+            &endOfChunk($lastGuessed,$guessed,$lastGuessedType,$guessedType) and
+            $lastGuessedType eq $lastCorrectType) {
+            $inCorrect=$false;
+            $correctChunk++;
+            $correctChunk{$lastCorrectType} = $correctChunk{$lastCorrectType} ?
+            $correctChunk{$lastCorrectType}+1 : 1;
+        } elsif ( 
+            &endOfChunk($lastCorrect,$correct,$lastCorrectType,$correctType) != 
+            &endOfChunk($lastGuessed,$guessed,$lastGuessedType,$guessedType) or
+            $guessedType ne $correctType ) {
+            $inCorrect=$false; 
+        }
+    }
 
-   if ( &startOfChunk($lastCorrect,$correct,$lastCorrectType,$correctType) and 
+    if ( &startOfChunk($lastCorrect,$correct,$lastCorrectType,$correctType) and 
         &startOfChunk($lastGuessed,$guessed,$lastGuessedType,$guessedType) and
         $guessedType eq $correctType) { $inCorrect = $true; }
 
-   if ( &startOfChunk($lastCorrect,$correct,$lastCorrectType,$correctType) ) {
-      $foundCorrect++; 
-      $foundCorrect{$correctType} = $foundCorrect{$correctType} ?
-          $foundCorrect{$correctType}+1 : 1;
-   }
-   if ( &startOfChunk($lastGuessed,$guessed,$lastGuessedType,$guessedType) ) {
-      $foundGuessed++; 
-      $foundGuessed{$guessedType} = $foundGuessed{$guessedType} ?
-          $foundGuessed{$guessedType}+1 : 1;
-   }
+    if ( &startOfChunk($lastCorrect,$correct,$lastCorrectType,$correctType) ) {
+        $foundCorrect++; 
+        $foundCorrect{$correctType} = $foundCorrect{$correctType} ?
+        $foundCorrect{$correctType}+1 : 1;
+    }
+    if ( &startOfChunk($lastGuessed,$guessed,$lastGuessedType,$guessedType) ) {
+        $foundGuessed++; 
+        $foundGuessed{$guessedType} = $foundGuessed{$guessedType} ?
+        $foundGuessed{$guessedType}+1 : 1;
+    }
 #   if ( $firstItem ne $boundary ) { 
-      if ( $correct eq $guessed and $guessedType eq $correctType ) { 
-         $correctTags++; 
-      }
-      $tokenCounter++; 
+    if ( $correct eq $guessed and $guessedType eq $correctType ) { 
+        $correctTags++; 
+    }
+    $tokenCounter++; 
 #   }
 
-   $lastGuessed = $guessed;
-   $lastCorrect = $correct;
-   $lastGuessedType = $guessedType;
-   $lastCorrectType = $correctType;
+    $lastGuessed = $guessed;
+    $lastCorrect = $correct;
+    $lastGuessedType = $guessedType;
+    $lastCorrectType = $correctType;
 }
+
 if ($inCorrect) { 
    $correctChunk++;
    $correctChunk{$lastCorrectType} = $correctChunk{$lastCorrectType} ?
@@ -189,6 +191,7 @@ if (not $latex) {
    printf "processed $tokenCounter tokens with $foundCorrect phrases; ";
    printf "found: $foundGuessed phrases; correct: $correctChunk.\n";
    if ($tokenCounter>0) {
+      printf "tokenCounter: %6.2f; correctTags:  %6.2f; ", $tokenCounter, $correctTags;
       printf "accuracy: %6.2f%%; ",100*$correctTags/$tokenCounter;
       printf "precision: %6.2f%%; ",$precision;
       printf "recall: %6.2f%%; ",$recall;
