@@ -29,8 +29,8 @@ It looks like a portion of [MSRA corpus](http://sighan.cs.uchicago.edu/bakeoff20
 
 ### train
 
-`python main.py -m=build_tag -t rb1`
-`python main.py -m=train -t rb1`
+- `python main.py -m=build_tag -t rb1`
+- `python main.py -m=train -t rb1`
 
 ### test
 

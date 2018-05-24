@@ -43,16 +43,12 @@ def st(label_path, save_path=''):
     accuracy = correct * 100.0 / total
     # processed 796 tokens with 0 phrases; found: 0 phrases; correct: 0.
     # accuracy:  28.02%; precision:   0.00%; recall:   0.00%; FB1:   0.00
-    print(total, len(ori_valid_words), len(label_valid_words), vc,
-                    correct, accuracy,
-                    precision, recall, fb1)
-    resfmt = 'tokens:%s\n' + \
+    resfmt = 'tokens:%s, tag correct: %s, tag accuracy: %.2f\n' + \
              'phrases: %s, found phrases: %s, correct phrases: %s\n' + \
-             'tag correct: %s, tag accuracy: %.2f\n' + \
              'phrases precision: %.2f;  phrases recall: %.2f; FB1: %.2f'
-    result = resfmt % (total, len(ori_valid_words), len(label_valid_words), vc,
-                    correct, accuracy,
-                    precision, recall, fb1)
+    result = resfmt % (total, correct, accuracy,
+            len(ori_valid_words), len(label_valid_words), vc,
+            precision, recall, fb1)
     if not save_path == '':
         with open(save_path, 'w') as w:
             w.write(result)

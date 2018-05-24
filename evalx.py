@@ -18,8 +18,6 @@ def conlleval(label_predict, label_path, metric_path):
             line.append("\n")
         fw.writelines(line)
 
-    print(label_predict)
-
     # eval_perl = "./conlleval_rev.pl"
     # os.system("perl {} < {} > {}".format(eval_perl, label_path, metric_path))
     # with open(metric_path) as fr:

@@ -1,3 +1,17 @@
 */.DS_Store
 .DS_Store
 .idea/
+__pycache__/
+nohup.out
+rb1_save/
+rb2/
+rb2_save/
+rmrb/
+trainset/
+trainset_save/
+tset1/dev.txt
+tset1/tags.txt
+tset1/test.txt
+tset1/train.txt
+tset1_save/1521112368/results/
+tset1_save/1526981677/

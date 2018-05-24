@@ -297,7 +297,7 @@ class BiLSTM_CRF(object):
         for label_, (sent, tag) in zip(label_list, data):
             tag_ = [label2tag[label__] for label__ in label_]
             sent_res = []
-            if  len(label_) != len(sent):
+            if len(label_) != len(sent):
                 print(sent)
                 print(len(label_))
                 print(tag)
