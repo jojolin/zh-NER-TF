@@ -1,7 +1,7 @@
 import json
 import tensorflow as tf
 import numpy as np
-import os, argparse, time
+import os, time
 from model import BiLSTM_CRF
 from utils import str2bool, get_logger, merge_tag
 from data import read_corpus, read_dictionary, random_embedding
@@ -14,28 +14,43 @@ config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
 config.gpu_options.per_process_gpu_memory_fraction = 0.2  # need ~700MB GPU memory
 
+class Args():
+    def __init__(self):
 
-## hyperparameters
-parser = argparse.ArgumentParser(description='BiLSTM-CRF for Chinese NER task')
-parser.add_argument('--train_data', '-t', type=str, default='data_path', help='train data source')
-# parser.add_argument('--test_data', type=str, default='data_path', help='test data source')
-parser.add_argument('--batch_size', type=int, default=64, help='#sample of each minibatch')
-parser.add_argument('--epoch', type=int, default=40, help='#epoch of training')
-parser.add_argument('--hidden_dim', type=int, default=300, help='#dim of hidden state')
-parser.add_argument('--optimizer', type=str, default='Adam', help='Adam/Adadelta/Adagrad/RMSProp/Momentum/SGD')
-parser.add_argument('--CRF', type=str2bool, default=True, help='use CRF at the top layer. if False, use Softmax')
-parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
-parser.add_argument('--clip', type=float, default=5.0, help='gradient clipping')
-parser.add_argument('--dropout', type=float, default=0.5, help='dropout keep_prob')
-parser.add_argument('--update_embedding', type=str2bool, default=True, help='update embedding during training')
-parser.add_argument('--pretrain_embedding', type=str, default='random', help='use pretrained char embedding or init it randomly')
-parser.add_argument('--embedding_dim', type=int, default=300, help='random init char embedding_dim')
-parser.add_argument('--shuffle', type=str2bool, default=True, help='shuffle training data before each epoch')
-parser.add_argument('--mode', '-m', type=str, default='demo', help='train/test/demo')
-parser.add_argument('--model', type=str, default='1521112368', help='model for test and demo')
-parser.add_argument('--sentence', '-s', type=str, default='', help='sentence to tag')
-parser.add_argument('--sfile', '-f', type=str, default='', help='file contains sentence to tag')
-args = parser.parse_args()
+        self.train_data='rb1' # '测试集，校验集，测试集的文件位置'
+
+        self.mode='train' # '步骤：build_tag, train, test, demo'
+
+        self.model = str(int(time.time()))
+        # 保存的模型路径 (self.train_data)_save/self.model
+        self.output_path = os.path.join('.', self.train_data+"_save", self.model)
+
+        self.sentence='' # 分词句子
+        self.sfile='' # 分词文件
+
+        self.batch_size=128 #64 # help='#sample of each minibatch'
+        self.epoch=5 #40  # help='#epoch of training'
+        self.hidden_dim=300 # help='#dim of hidden state'
+        self.optimizer='Adam' # help='Adam/Adadelta/Adagrad/RMSProp/Momentum/SGD'
+        self.CRF=True # help='use CRF at the top layer. if False, use Softmax'
+        self.lr=0.001 # help='learning rate'
+        self.clip=5.0 # help='gradient clipping'
+        self.dropout=0.5 # help='dropout keep_prob'
+        self.update_embedding=True # help='update embedding during training'
+        self.pretrain_embedding='random' # help='use pretrained char embedding or init it randomly'
+        self.embedding_dim=300 # help='random init char embedding_dim'
+        self.shuffle=True # help='shuffle training data before each epoch'
+
+    def __str__(self):
+        st = ''
+        for prop in dir(self):
+            if prop.startswith('_'):
+                continue
+            else:
+                st +='prop: %s, value: %s' % (prop,  args.__getattribute__(prop))+'\n'
+        return st
+
+args = Args()
 
 def load_stuff():
     ## get char embeddings
@@ -51,9 +66,7 @@ def load_stuff():
 def init_paths_config():
     ## paths setting
     paths = {}
-    timestamp = str(int(time.time())) if args.mode == 'train' else args.model
-
-    output_path = os.path.join('.', args.train_data+"_save", timestamp)
+    output_path = args.output_path
     if not os.path.exists(output_path): os.makedirs(output_path)
 
     summary_path = os.path.join(output_path, "summaries")
@@ -127,6 +140,7 @@ def train(word2id, embeddings, paths):
     model.train(train=train_data, dev=dev_data)
 
 def test(word2id, embeddings, paths):
+    '''模型评估'''
     ckpt_file = tf.train.latest_checkpoint(paths['model_path'])
     paths['model_path'] = ckpt_file
 
@@ -211,6 +225,29 @@ def run():
         pass
 
 def main():
+    # 每一个新的训练集必须先运行以下命令
+    args.mode = 'build_tag'
+    args.train_data = "rb1"
+    args.model = str(int(time.time()))
+
+    # train
+    args.mode = 'train'
+    args.train_data = "rb1"
+    args.output_path= '1234567891011'
+    #args.model = '123'
+
+    # test
+    args.mode = 'test'
+    args.train_data = "rb1"
+    args.model = '1234567'
+
+    # demo
+    args.mode = 'demo'
+    args.train_data = "rb1"
+    args.output_path= '1234567891011'
+    args.sentence = '基于服务资源的需求检索'
+
+    args.mode='demo'
     run()
 
 if __name__ == '__main__':

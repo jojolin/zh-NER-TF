@@ -49,8 +49,8 @@ My test performance:
 
 ### demo
 
-- `python main.py --mode=demo -s "一体化自助服务终端机依次排开" --model=1521112368`
-- `python main.py --mode=demoi --model=1521112368`
+- `python main.py -t rb1 --mode=demo -s "一体化自助服务终端机依次排开" --model=1521112368`
+- `python main.py -t rb1 --mode=demoi --model=1521112368`
 
 ### references
 
